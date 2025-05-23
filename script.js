@@ -125,7 +125,7 @@ async function fetchGitHubProfile() {
         
         // Set timeout for fetch to avoid hanging
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
         
         // Fetch user data from our server-side API endpoint
         const userResponse = await fetch(`/api/github/user/${username}`, {
@@ -141,34 +141,45 @@ async function fetchGitHubProfile() {
         console.log('Successfully fetched GitHub user data:', userData);
         clearTimeout(timeoutId); // Clear timeout after successful fetch
         
+        // Format the date
+        const createdDate = new Date(userData.created_at);
+        const formattedDate = createdDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
         // Update GitHub profile info
         githubProfileElement.innerHTML = `
             <div class="github-profile-header">
                 <img src="${userData.avatar_url}" alt="${username} profile" class="github-avatar">
                 <div>
                     <h3 class="github-profile-name">${userData.name || username}</h3>
-                    <p class="github-profile-username">@${userData.login}</p>
+                    <p class="github-profile-username"><i class="fab fa-github"></i>@${userData.login}</p>
+                    <p class="github-profile-bio">${userData.bio || 'Full Stack Web Developer'}</p>
+                    <div class="github-stats">
+                        <div class="github-stat">
+                            <span class="stat-value">${userData.public_repos}</span>
+                            <span class="stat-label">Repositories</span>
+                        </div>
+                        <div class="github-stat">
+                            <span class="stat-value">${userData.followers}</span>
+                            <span class="stat-label">Followers</span>
+                        </div>
+                        <div class="github-stat">
+                            <span class="stat-value">${userData.following}</span>
+                            <span class="stat-label">Following</span>
+                        </div>
+                    </div>
+                    <div class="github-links">
+                        <a href="${userData.html_url}" target="_blank" class="github-link">
+                            <i class="fab fa-github"></i> View Profile
+                        </a>
+                        ${userData.blog ? `<a href="${userData.blog}" target="_blank" class="github-link">
+                            <i class="fas fa-globe"></i> Website
+                        </a>` : ''}
+                    </div>
                 </div>
-            </div>
-            <p class="github-profile-bio">${userData.bio || 'Full Stack Web Developer'}</p>
-            <div class="github-stats">
-                <div class="github-stat">
-                    <span class="stat-value">${userData.public_repos}</span>
-                    <span class="stat-label">Repositories</span>
-                </div>
-                <div class="github-stat">
-                    <span class="stat-value">${userData.followers}</span>
-                    <span class="stat-label">Followers</span>
-                </div>
-                <div class="github-stat">
-                    <span class="stat-value">${userData.following}</span>
-                    <span class="stat-label">Following</span>
-                </div>
-            </div>
-            <div class="github-links">
-                <a href="${userData.html_url}" target="_blank" class="github-link">
-                    <i class="fab fa-github"></i> View Profile
-                </a>
             </div>
         `;
         
@@ -192,28 +203,25 @@ async function fetchGitHubProfile() {
 // Fetch GitHub projects with fallback
 async function fetchGitHubRepos(username) {
     console.log('Starting to fetch GitHub projects...');
-    const projectGrid = document.getElementById('github-repos');
-    const loadingProjects = document.querySelector('.loading-projects');
+    const reposGrid = document.getElementById('github-repos');
     
-    if (!projectGrid) {
-        console.error('Project grid element not found');
+    if (!reposGrid) {
+        console.error('GitHub repos grid element not found');
         return;
     }
     
-    // Show loading indicator
-    if (loadingProjects) {
-        loadingProjects.style.display = 'flex';
-    }
-    
     // Add immediate timeout to ensure we don't wait too long
-    setTimeout(() => {
-        if (loadingProjects && loadingProjects.style.display === 'flex') {
+    const timeoutId = setTimeout(() => {
+        if (reposGrid.querySelector('.loading-github')) {
             console.log('Loading timeout reached');
-            loadingProjects.style.display = 'none';
-            // Show message that GitHub repos couldn't be loaded
-            projectGrid.innerHTML = '<div class="github-error"><p>Could not load GitHub repositories. Please try again later.</p></div>';
+            reposGrid.innerHTML = `
+                <div class="github-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Could not load GitHub repositories. Please try again later.</p>
+                </div>
+            `;
         }
-    }, 3000); // 3 second timeout as a safety measure
+    }, 10000); // 10 second timeout as a safety measure
     
     // No fallback projects - we'll only show actual GitHub repos
     
@@ -236,60 +244,14 @@ async function fetchGitHubRepos(username) {
     }
     
     try {
-        const username = 'yashwanthg13';
-        console.log(`Fetching GitHub data for ${username}...`);
-        
         // Set timeout for fetch to avoid hanging
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-        
-        // Fetch user data from our server-side API endpoint
-        console.log(`Fetching GitHub data for ${username} from server API...`);
-        const userResponse = await fetch(`/api/github/user/${username}`, {
-            signal: controller.signal
-        });
-        
-        if (!userResponse.ok) {
-            console.log(`GitHub API returned status: ${userResponse.status}`);
-            throw new Error(`GitHub API user response error: ${userResponse.status}`);
-        }
-        
-        const userData = await userResponse.json();
-        console.log('Successfully fetched GitHub user data');
-        clearTimeout(timeoutId); // Clear timeout after successful fetch
-        
-        // Update GitHub profile info
-        githubInfo.innerHTML = `
-            <div class="github-profile">
-                <img src="${userData.avatar_url}" alt="${username} profile" class="github-avatar">
-                <div class="github-profile-info">
-                    <h3>${userData.name || username}</h3>
-                    <p>${userData.bio || 'Full Stack Web Developer'}</p>
-                    <div class="github-stats">
-                        <div class="stat">
-                            <span class="stat-value">${userData.public_repos}</span>
-                            <span class="stat-label">Repositories</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">${userData.followers}</span>
-                            <span class="stat-label">Followers</span>
-                        </div>
-                    </div>
-                    <a href="${userData.html_url}" target="_blank" class="github-link">
-                        <i class="fab fa-github"></i> View Profile
-                    </a>
-                </div>
-            </div>
-        `;
-        
-        // Set new timeout for repos fetch
-        const reposController = new AbortController();
-        const reposTimeoutId = setTimeout(() => reposController.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
         
         // Fetch repositories from our server-side API endpoint
         console.log(`Fetching GitHub repos for ${username} from server API...`);
         const reposResponse = await fetch(`/api/github/repos/${username}`, {
-            signal: reposController.signal
+            signal: controller.signal
         });
         
         if (!reposResponse.ok) {
@@ -297,62 +259,144 @@ async function fetchGitHubRepos(username) {
         }
         
         const repos = await reposResponse.json();
-        clearTimeout(reposTimeoutId);
+        console.log('Successfully fetched GitHub repos:', repos.length);
+        clearTimeout(timeoutId); // Clear timeout after successful fetch
         
-        // Hide loading indicator
-        if (loadingProjects) {
-            loadingProjects.style.display = 'none';
-        }
-        
-        // Clear project grid
-        projectGrid.innerHTML = '';
+        // Clear the loading indicator
+        reposGrid.innerHTML = '';
         
         if (Array.isArray(repos) && repos.length > 0) {
-            // Filter out portfolio repository and forks
-            const filteredRepos = repos.filter(repo => 
-                !repo.name.toLowerCase().includes('portfolio') && 
-                !repo.fork
-            );
+            // Filter out forks and sort by stars
+            const filteredRepos = repos
+                .filter(repo => !repo.fork)
+                .sort((a, b) => b.stargazers_count - a.stargazers_count);
             
             if (filteredRepos.length === 0) {
-                // Show message that no repositories were found
-                projectGrid.innerHTML = '<div class="github-error"><p>No public repositories found. Check back later for updates.</p></div>';
+                reposGrid.innerHTML = `
+                    <div class="github-error">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No public repositories found. Check back later for updates.</p>
+                    </div>
+                `;
                 return;
             }
             
-            // Limit to 6 projects
+            // Limit to 6 repositories
             const limitedRepos = filteredRepos.slice(0, 6);
             
-            // Create and append project cards
+            // Create and append repository cards
             limitedRepos.forEach(repo => {
-                const projectCard = createProjectCard(repo);
-                projectGrid.appendChild(projectCard);
+                const repoCard = createRepoCard(repo);
+                reposGrid.appendChild(repoCard);
                 
                 // Add animation observer if it exists
                 if (typeof observer !== 'undefined') {
-                    observer.observe(projectCard);
+                    observer.observe(repoCard);
                 }
             });
-            
-            // Add hover effects to all project cards
-            addHoverEffectsToCards();
         } else {
-            // Show message that no repositories were found
-            projectGrid.innerHTML = '<div class="github-error"><p>No repositories found. Check back later for updates.</p></div>';
+            reposGrid.innerHTML = `
+                <div class="github-error">
+                    <i class="fas fa-info-circle"></i>
+                    <p>No repositories found. Check back later for updates.</p>
+                </div>
+            `;
         }
         
     } catch (error) {
-        console.error('Error fetching GitHub projects:', error);
-        
-        // Hide loading indicator
-        if (loadingProjects) {
-            loadingProjects.style.display = 'none';
-        }
+        console.error('Error fetching GitHub repositories:', error);
         
         // Display error message
-        console.log('Error loading GitHub repositories');
-        projectGrid.innerHTML = '<div class="github-error"><p>Could not load GitHub repositories. Please try again later.</p></div>';
+        reposGrid.innerHTML = `
+            <div class="github-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Could not load GitHub repositories. Please try again later.</p>
+                <a href="https://github.com/${username}?tab=repositories" target="_blank" class="github-link">
+                    <i class="fab fa-github"></i> View Repositories on GitHub
+                </a>
+            </div>
+        `;
     }
+}
+
+// Create a repository card from GitHub repo data
+function createRepoCard(repo) {
+    const card = document.createElement('article');
+    card.className = 'repo-card';
+    
+    // Format the name to be more readable
+    const formattedName = repo.name
+        .replace(/-/g, ' ')
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    
+    // Get repository description or use a default
+    const description = repo.description || 'No description provided.';
+    
+    // Get repository language
+    const language = repo.language || 'Not specified';
+    
+    // Get language color
+    const languageColorClass = getLanguageColorClass(language);
+    
+    // Create HTML for the repository card
+    card.innerHTML = `
+        <h3 class="repo-name">
+            <a href="${repo.html_url}" target="_blank">${formattedName}</a>
+        </h3>
+        <p class="repo-description">${description}</p>
+        <div class="repo-meta">
+            <div class="repo-stats">
+                ${language ? `
+                <div class="repo-language">
+                    <span class="language-color ${languageColorClass}"></span>
+                    ${language}
+                </div>` : ''}
+                <div class="repo-stat">
+                    <i class="fas fa-star"></i>
+                    ${repo.stargazers_count}
+                </div>
+                <div class="repo-stat">
+                    <i class="fas fa-code-branch"></i>
+                    ${repo.forks_count}
+                </div>
+            </div>
+            <div class="repo-links">
+                <a href="${repo.html_url}" target="_blank" class="github-link">
+                    <i class="fab fa-github"></i> View Code
+                </a>
+                ${repo.homepage ? `
+                <a href="${repo.homepage}" target="_blank" class="github-link">
+                    <i class="fas fa-external-link-alt"></i> Live Demo
+                </a>` : ''}
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Get language color class based on language name
+function getLanguageColorClass(language) {
+    if (!language) return '';
+    
+    // Remove spaces and special characters
+    const formattedLanguage = language.replace(/[^a-zA-Z0-9]/g, '');
+    
+    // Check if we have a predefined color for this language
+    const knownLanguages = [
+        'JavaScript', 'TypeScript', 'HTML', 'CSS', 'Python', 
+        'Java', 'C', 'CPP', 'CSharp', 'PHP', 'Ruby', 'Go', 
+        'Swift', 'Kotlin', 'Rust', 'Dart'
+    ];
+    
+    // Find a match (case insensitive)
+    const match = knownLanguages.find(lang => 
+        lang.toLowerCase() === formattedLanguage.toLowerCase());
+    
+    return match || formattedLanguage;
 }
 
 // Add CSS for GitHub error messages
