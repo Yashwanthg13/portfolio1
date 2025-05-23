@@ -1,0 +1,154 @@
+/* Micro-interactions CSS */
+
+/* Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Project Cards */
+.project-card {
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.project-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Buttons */
+.cta-btn, .about-btn, .submit-btn, .project-code-btn {
+    transition: all 0.3s ease;
+}
+
+.cta-btn:hover, .about-btn:hover, .submit-btn:hover, .project-code-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.cta-btn:active, .about-btn:active, .submit-btn:active, .project-code-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Links */
+.nav-links a {
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary);
+    transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+/* Social Links */
+.social-links a {
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.social-links a:hover {
+    animation: pulse 0.5s ease;
+}
+
+/* Form Inputs */
+.form-group input:focus, .form-group textarea:focus {
+    transition: all 0.3s ease;
+    transform: translateY(-2px);
+}
+
+/* Skill Icons */
+.skill-icon {
+    transition: all 0.3s ease;
+}
+
+.skill-category:hover .skill-icon {
+    animation: float 2s ease infinite;
+    color: var(--primary);
+}
+
+/* Theme Toggle */
+#theme-toggle, #mobile-theme-toggle {
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+#theme-toggle:hover, #mobile-theme-toggle:hover {
+    animation: pulse 0.5s ease;
+}
+
+/* Loading Animation */
+.loading-projects i {
+    animation: float 1.5s ease infinite;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn span {
+    transition: all 0.3s ease;
+}
+
+/* Section Titles */
+.section-title {
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 2px;
+    background-color: var(--primary);
+    transition: width 0.3s ease;
+}
+
+.section-title:hover::after {
+    width: 100px;
+}
+
+/* Dark Mode Specific Interactions */
+[data-theme="dark"] .project-card:hover {
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .cta-btn:hover, 
+[data-theme="dark"] .about-btn:hover, 
+[data-theme="dark"] .submit-btn:hover, 
+[data-theme="dark"] .project-code-btn:hover {
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.05);
+}
+
+/* Fix for Contact Me button in dark mode */
+[data-theme="dark"] .about-btn:hover {
+    background-color: var(--primary);
+    color: var(--background);
+}

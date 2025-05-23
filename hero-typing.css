@@ -1,0 +1,56 @@
+/* Hero section typing effect styles */
+
+/* Hero typed text container */
+#hero-typed-text {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Hero cursor */
+.hero-cursor {
+    display: inline-block;
+    width: 3px;
+    height: 1em;
+    background-color: var(--primary);
+    margin-left: 2px;
+    animation: blink 0.8s infinite;
+    position: relative;
+    vertical-align: middle;
+}
+
+/* Blinking animation for cursor */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .hero-cursor {
+    background-color: #ffffff;
+}
+
+/* Hero section enhancements */
+.hero-content h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+}

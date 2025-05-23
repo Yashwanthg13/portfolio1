@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yashwanth G | Full Stack Web Developer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="micro-interactions.css">
+    <link rel="stylesheet" href="hamburger.css">
+    <link rel="stylesheet" href="hero-typing.css">
+    <link rel="stylesheet" href="project-cards.css">
+    <!-- Typed.js for typing effect -->
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    <script src="theme.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="logo">
+                    <a href="#home">YG<span class="cursor"><span class="bracket-left">&lt;</span><span class="bracket-slash">/</span><span class="bracket-right">&gt;</span></span></a>
+                </div>
+                
+                <div class="hamburger-menu">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                
+                <ul class="nav-menu">
+                    <li><a href="#home" class="nav-link">Home</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                    <li><a href="#projects" class="nav-link">Projects</a></li>
+                    <li><a href="#skills" class="nav-link">Skills</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                    <li class="theme-toggle-wrapper">
+                        <button class="theme-toggle" aria-label="Toggle dark mode">
+                            <i class="fas fa-moon theme-icon"></i>
+                            <i class="fas fa-sun theme-icon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="particles"></div>
+            <div class="container">
+                <div class="hero-content">
+                    <h1><span id="hero-typed-text"></span><span class="hero-cursor">|</span></h1>
+                    <h2 class="hero-subtitle">Full Stack Web Developer</h2>
+                    <p class="hero-text">I build clean, efficient, and user-friendly applications.</p>
+                    <a href="#projects" class="cta-btn">View My Work</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="about">
+            <div class="container">
+                <h2 class="section-title">About Me</h2>
+                <div class="about-content">
+                    <div class="about-text">
+                        <p>I'm <strong>Yashwanth G</strong>, a motivated Computer Science undergraduate with hands-on experience in full-stack development using React.js, Java, Spring Boot, and MySQL.</p>
+                        <p>Skilled in building responsive interfaces and scalable backend systems. A strong team player with effective communication and problem-solving skills.</p>
+                        <p>Passionate about building impactful solutions in collaborative, Agile-driven environments.</p>
+                        <div class="about-buttons">
+                            <a href="#contact" class="about-btn">Contact Me</a>
+                            <a href="YashwanthG_Resume12.pdf" class="about-btn resume-btn" target="_blank">Download Resume</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+    <section id="projects" class="projects">
+            <div class="container">
+                <h2 class="section-title">Projects</h2>
+                <p class="section-subtitle">Some of my recent work</p>
+                
+                <div class="project-grid">
+                    <!-- Projects will be loaded here dynamically -->
+                    <div class="loading-projects">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading projects...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="skills" class="skills">
+            <div class="container">
+                <h2 class="section-title">Technical Skills</h2>
+                <p class="skills-intro">My technical expertise spans across multiple domains of software development, with a focus on creating scalable and efficient web applications.</p>
+                
+                <div class="skills-wrapper">
+                    <div class="skills-grid">
+                        <div class="skill-category">
+                            <div class="skill-header">
+                                <i class="fas fa-laptop-code skill-icon"></i>
+                                <h3>Frontend Development</h3>
+                            </div>
+                            <ul>
+                                <li><i class="fab fa-html5"></i>HTML5 & CSS3</li>
+                                <li><i class="fab fa-react"></i>React.js</li>
+                                <li><i class="fab fa-bootstrap"></i>Bootstrap</li>
+                                <li><i class="fas fa-mobile-alt"></i>Responsive Design</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="skill-category">
+                            <div class="skill-header">
+                                <i class="fas fa-server skill-icon"></i>
+                                <h3>Backend Development</h3>
+                            </div>
+                            <ul>
+                                <li><i class="fab fa-java"></i>Java</li>
+                                <li><i class="fas fa-database"></i>MySQL</li>
+                                <li><i class="fas fa-code-branch"></i>RESTful APIs</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="skill-category">
+                            <div class="skill-header">
+                                <i class="fas fa-cloud skill-icon"></i>
+                                <h3>Cloud & DevOps</h3>
+                            </div>
+                            <ul>
+                                <li><i class="fab fa-aws"></i>AWS Services</li>
+                                <li><i class="fab fa-docker"></i>Docker</li>
+                                <li><i class="fab fa-github-square"></i>CI/CD Pipelines</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="skill-category">
+                            <div class="skill-header">
+                                <i class="fas fa-tools skill-icon"></i>
+                                <h3>Tools & Technologies</h3>
+                            </div>
+                            <ul>
+                                <li><i class="fab fa-git-alt"></i>Git & GitHub</li>
+                                <li><i class="fas fa-code"></i>VS Code</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="contact">
+            <div class="container">
+                <h2 class="section-title">Get In Touch</h2>
+                <div class="contact-content">
+                    <p>I'm currently available for freelance projects and full-time positions.</p>
+                    
+                    <div class="contact-form-container">
+                        <form id="contact-form" class="contact-form">
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="subject">Subject</label>
+                                <input type="text" id="subject" name="subject" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Message</label>
+                                <textarea id="message" name="message" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn">Send Message</button>
+                            <div id="form-status" class="form-status"></div>
+                        </form>
+                    </div>
+                    
+                    <div class="contact-social">
+                        <div class="social-links">
+                            <a href="https://github.com/yashwanthg13" target="_blank" title="GitHub">
+                                <i class="fab fa-github"></i>
+                            </a>
+                            <a href="https://linkedin.com" target="_blank" title="LinkedIn">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                            <a href="mailto:your-email@example.com" title="Email">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Yashwanth G. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="hamburger.js"></script>
+    <script src="typing-effect.js"></script>
+</body>
+</html>
