@@ -11,6 +11,11 @@ const PORT = process.env.PORT || 3007;
 // You'll need to set this in your Vercel environment variables
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 
+// Log a warning if GitHub token is not set
+if (!GITHUB_TOKEN) {
+  console.warn('GitHub API token not set. API rate limits will be restricted.');
+}
+
 // Middleware for parsing JSON and urlencoded form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

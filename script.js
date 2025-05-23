@@ -109,10 +109,90 @@ function debounce(func, wait = 10) {
 // Add scroll event listener with debounce
 window.addEventListener('scroll', debounce(updateActiveSection));
 
-// Fetch GitHub projects
-async function fetchGitHubProjects() {
+// Fetch GitHub profile and projects
+async function fetchGitHubProfile() {
+    console.log('Starting to fetch GitHub profile...');
+    const githubProfileElement = document.getElementById('github-profile');
+    
+    if (!githubProfileElement) {
+        console.error('GitHub profile element not found');
+        return;
+    }
+    
+    try {
+        const username = 'yashwanthg13';
+        console.log(`Fetching GitHub profile data for ${username}...`);
+        
+        // Set timeout for fetch to avoid hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        // Fetch user data from our server-side API endpoint
+        const userResponse = await fetch(`/api/github/user/${username}`, {
+            signal: controller.signal
+        });
+        
+        if (!userResponse.ok) {
+            console.log(`GitHub API returned status: ${userResponse.status}`);
+            throw new Error(`GitHub API user response error: ${userResponse.status}`);
+        }
+        
+        const userData = await userResponse.json();
+        console.log('Successfully fetched GitHub user data:', userData);
+        clearTimeout(timeoutId); // Clear timeout after successful fetch
+        
+        // Update GitHub profile info
+        githubProfileElement.innerHTML = `
+            <div class="github-profile-header">
+                <img src="${userData.avatar_url}" alt="${username} profile" class="github-avatar">
+                <div>
+                    <h3 class="github-profile-name">${userData.name || username}</h3>
+                    <p class="github-profile-username">@${userData.login}</p>
+                </div>
+            </div>
+            <p class="github-profile-bio">${userData.bio || 'Full Stack Web Developer'}</p>
+            <div class="github-stats">
+                <div class="github-stat">
+                    <span class="stat-value">${userData.public_repos}</span>
+                    <span class="stat-label">Repositories</span>
+                </div>
+                <div class="github-stat">
+                    <span class="stat-value">${userData.followers}</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+                <div class="github-stat">
+                    <span class="stat-value">${userData.following}</span>
+                    <span class="stat-label">Following</span>
+                </div>
+            </div>
+            <div class="github-links">
+                <a href="${userData.html_url}" target="_blank" class="github-link">
+                    <i class="fab fa-github"></i> View Profile
+                </a>
+            </div>
+        `;
+        
+        // After successfully displaying the profile, fetch repositories
+        fetchGitHubRepos(username);
+        
+    } catch (error) {
+        console.error('Error fetching GitHub profile:', error);
+        githubProfileElement.innerHTML = `
+            <div class="github-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Could not load GitHub profile. Please try again later.</p>
+                <a href="https://github.com/yashwanthg13" target="_blank" class="github-link">
+                    <i class="fab fa-github"></i> View Profile on GitHub
+                </a>
+            </div>
+        `;
+    }
+}
+
+// Fetch GitHub projects with fallback
+async function fetchGitHubRepos(username) {
     console.log('Starting to fetch GitHub projects...');
-    const projectGrid = document.querySelector('.project-grid');
+    const projectGrid = document.getElementById('github-repos');
     const loadingProjects = document.querySelector('.loading-projects');
     
     if (!projectGrid) {
@@ -125,64 +205,17 @@ async function fetchGitHubProjects() {
         loadingProjects.style.display = 'flex';
     }
     
-    // Set a longer timeout to ensure we have time to fetch projects
-    const timeoutPromise = new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({ timedOut: true });
-        }, 10000); // 10 second timeout for better chances of success
-    });
-    
-    // We'll only use real GitHub projects, but keep this as a reference
-    const referenceProjects = [
-        {
-            name: 'E-Commerce Platform',
-            description: 'A full-featured e-commerce platform with product catalog, shopping cart, and secure checkout process.',
-            technologies: ['React', 'Node.js', 'MongoDB', 'Stripe API'],
-            image: 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=E-Commerce+Platform',
-            demoUrl: '#',
-            codeUrl: '#'
-        },
-        {
-            name: 'Task Management App',
-            description: 'A task management application with drag-and-drop functionality, task categorization, and user authentication.',
-            technologies: ['React', 'Express', 'MongoDB', 'JWT'],
-            image: 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=Task+Management+App',
-            demoUrl: '#',
-            codeUrl: '#'
-        },
-        {
-            name: 'Weather Dashboard',
-            description: 'Weather forecasting application that provides real-time weather data using the OpenWeatherMap API.',
-            technologies: ['JavaScript', 'REST APIs', 'Bootstrap', 'LocalStorage'],
-            image: 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=Weather+Dashboard',
-            demoUrl: '#',
-            codeUrl: '#'
-        },
-        {
-            name: 'Social Media Dashboard',
-            description: 'A comprehensive dashboard for social media analytics with real-time data visualization.',
-            technologies: ['Vue.js', 'D3.js', 'Firebase', 'Social APIs'],
-            image: 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=Social+Media+Dashboard',
-            demoUrl: '#',
-            codeUrl: '#'
-        },
-        {
-            name: 'Recipe Finder App',
-            description: 'An application to discover and save recipes based on available ingredients and dietary preferences.',
-            technologies: ['React Native', 'Redux', 'Food API', 'AsyncStorage'],
-            image: 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=Recipe+Finder+App',
-            demoUrl: '#',
-            codeUrl: '#'
-        },
-        {
-            name: 'Fitness Tracker',
-            description: 'A fitness tracking application that monitors workouts, nutrition, and provides personalized recommendations.',
-            technologies: ['Flutter', 'Firebase', 'Health APIs', 'Charts'],
-            image: 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=Fitness+Tracker',
-            demoUrl: '#',
-            codeUrl: '#'
+    // Add immediate timeout to ensure we don't wait too long
+    setTimeout(() => {
+        if (loadingProjects && loadingProjects.style.display === 'flex') {
+            console.log('Loading timeout reached');
+            loadingProjects.style.display = 'none';
+            // Show message that GitHub repos couldn't be loaded
+            projectGrid.innerHTML = '<div class="github-error"><p>Could not load GitHub repositories. Please try again later.</p></div>';
         }
-    ];
+    }, 3000); // 3 second timeout as a safety measure
+    
+    // No fallback projects - we'll only show actual GitHub repos
     
     // Function to filter projects by category
     function filterProjects(filter) {
@@ -206,41 +239,65 @@ async function fetchGitHubProjects() {
         const username = 'yashwanthg13';
         console.log(`Fetching GitHub data for ${username}...`);
         
-        // Make multiple attempts to fetch repositories
-        let repos = [];
-        let attempts = 0;
-        const maxAttempts = 3;
+        // Set timeout for fetch to avoid hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
         
-        while (attempts < maxAttempts && repos.length === 0) {
-            attempts++;
-            console.log(`Attempt ${attempts} to fetch GitHub repos...`);
-            
-            try {
-                // Race between fetch and timeout
-                const fetchPromise = fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`);
-                const result = await Promise.race([fetchPromise, timeoutPromise]);
-                
-                // If we got the timeout result instead of fetch result
-                if (result.timedOut) {
-                    console.log('GitHub API request timed out, retrying...');
-                    continue;
-                }
-                
-                const response = await result;
-                
-                if (!response.ok) {
-                    console.log(`GitHub API returned status: ${response.status}, retrying...`);
-                    continue;
-                }
-                
-                repos = await response.json();
-                console.log('Successfully fetched GitHub repos:', repos.length);
-            } catch (fetchError) {
-                console.error('Error in fetch attempt:', fetchError);
-                // Wait a second before retrying
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
+        // Fetch user data from our server-side API endpoint
+        console.log(`Fetching GitHub data for ${username} from server API...`);
+        const userResponse = await fetch(`/api/github/user/${username}`, {
+            signal: controller.signal
+        });
+        
+        if (!userResponse.ok) {
+            console.log(`GitHub API returned status: ${userResponse.status}`);
+            throw new Error(`GitHub API user response error: ${userResponse.status}`);
         }
+        
+        const userData = await userResponse.json();
+        console.log('Successfully fetched GitHub user data');
+        clearTimeout(timeoutId); // Clear timeout after successful fetch
+        
+        // Update GitHub profile info
+        githubInfo.innerHTML = `
+            <div class="github-profile">
+                <img src="${userData.avatar_url}" alt="${username} profile" class="github-avatar">
+                <div class="github-profile-info">
+                    <h3>${userData.name || username}</h3>
+                    <p>${userData.bio || 'Full Stack Web Developer'}</p>
+                    <div class="github-stats">
+                        <div class="stat">
+                            <span class="stat-value">${userData.public_repos}</span>
+                            <span class="stat-label">Repositories</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">${userData.followers}</span>
+                            <span class="stat-label">Followers</span>
+                        </div>
+                    </div>
+                    <a href="${userData.html_url}" target="_blank" class="github-link">
+                        <i class="fab fa-github"></i> View Profile
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        // Set new timeout for repos fetch
+        const reposController = new AbortController();
+        const reposTimeoutId = setTimeout(() => reposController.abort(), 5000);
+        
+        // Fetch repositories from our server-side API endpoint
+        console.log(`Fetching GitHub repos for ${username} from server API...`);
+        const reposResponse = await fetch(`/api/github/repos/${username}`, {
+            signal: reposController.signal
+        });
+        
+        if (!reposResponse.ok) {
+            throw new Error(`GitHub API repos response error: ${reposResponse.status}`);
+        }
+        
+        const repos = await reposResponse.json();
+        clearTimeout(reposTimeoutId);
         
         // Hide loading indicator
         if (loadingProjects) {
@@ -251,58 +308,39 @@ async function fetchGitHubProjects() {
         projectGrid.innerHTML = '';
         
         if (Array.isArray(repos) && repos.length > 0) {
-            // Filter out forks and empty repos, and prioritize those with descriptions
-            let filteredRepos = repos.filter(repo => !repo.fork);
+            // Filter out portfolio repository and forks
+            const filteredRepos = repos.filter(repo => 
+                !repo.name.toLowerCase().includes('portfolio') && 
+                !repo.fork
+            );
             
-            // Sort repos: first those with descriptions, then by stars, then by last updated
-            filteredRepos.sort((a, b) => {
-                // First prioritize repos with descriptions
-                if (a.description && !b.description) return -1;
-                if (!a.description && b.description) return 1;
-                
-                // Then by stars count
-                if (a.stargazers_count !== b.stargazers_count) {
-                    return b.stargazers_count - a.stargazers_count;
-                }
-                
-                // Then by last updated
-                return new Date(b.updated_at) - new Date(a.updated_at);
-            });
+            if (filteredRepos.length === 0) {
+                // Show message that no repositories were found
+                projectGrid.innerHTML = '<div class="github-error"><p>No public repositories found. Check back later for updates.</p></div>';
+                return;
+            }
             
             // Limit to 6 projects
             const limitedRepos = filteredRepos.slice(0, 6);
             
-            if (limitedRepos.length === 0) {
-                // If no repos found after filtering, show a message
-                projectGrid.innerHTML = `
-                    <div class="no-projects-message">
-                        <p>No GitHub repositories found. Please check back later.</p>
-                    </div>
-                `;
-                return;
-            }
-            
             // Create and append project cards
             limitedRepos.forEach(repo => {
-                const card = createGitHubProjectCard(repo);
-                projectGrid.appendChild(card);
+                const projectCard = createProjectCard(repo);
+                projectGrid.appendChild(projectCard);
                 
                 // Add animation observer if it exists
                 if (typeof observer !== 'undefined') {
-                    observer.observe(card);
+                    observer.observe(projectCard);
                 }
             });
             
             // Add hover effects to all project cards
             addHoverEffectsToCards();
         } else {
-            // If no repos found, show a message
-            projectGrid.innerHTML = `
-                <div class="no-projects-message">
-                    <p>No GitHub repositories found. Please check back later.</p>
-                </div>
-            `;
+            // Show message that no repositories were found
+            projectGrid.innerHTML = '<div class="github-error"><p>No repositories found. Check back later for updates.</p></div>';
         }
+        
     } catch (error) {
         console.error('Error fetching GitHub projects:', error);
         
@@ -311,80 +349,36 @@ async function fetchGitHubProjects() {
             loadingProjects.style.display = 'none';
         }
         
-        // Show error message
-        projectGrid.innerHTML = `
-            <div class="no-projects-message">
-                <p>Unable to fetch GitHub repositories. Please check back later.</p>
-            </div>
-        `;
+        // Display error message
+        console.log('Error loading GitHub repositories');
+        projectGrid.innerHTML = '<div class="github-error"><p>Could not load GitHub repositories. Please try again later.</p></div>';
     }
 }
 
-// Display projects
-function displayProjects(projectGrid, projects) {
-    console.log('Setting up projects display...');
-    projectGrid.innerHTML = '';
-    
-    projects.forEach(project => {
-        const card = document.createElement('article');
-        card.className = 'project-card';
-        
-        // Determine project category for filtering
-        let category = 'other';
-        const lowerName = project.name.toLowerCase();
-        const lowerDescription = project.description.toLowerCase();
-        
-        // Assign category based on project name, description, or technologies
-        if (
-            lowerName.includes('web') || 
-            lowerName.includes('site') || 
-            lowerDescription.includes('web') ||
-            project.technologies.some(tech => ['HTML', 'CSS', 'JavaScript', 'React', 'Angular', 'Vue'].includes(tech))
-        ) {
-            category = 'web';
-        } else if (
-            lowerName.includes('app') || 
-            lowerName.includes('mobile') || 
-            lowerDescription.includes('app') ||
-            project.technologies.some(tech => ['React Native', 'Flutter', 'Android', 'iOS', 'Mobile'].includes(tech))
-        ) {
-            category = 'app';
-        }
-        
-        // Set category as data attribute for filtering
-        card.setAttribute('data-category', category);
-        
-        // Create project card HTML
-        card.innerHTML = `
-            <div class="project-image">
-                <img src="${project.image}" alt="${project.name}" class="project-img">
-            </div>
-            <div class="project-info">
-                <h3>${project.name}</h3>
-                <p>${project.description}</p>
-                <div class="project-technologies">
-                    ${project.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
-                </div>
-                <div class="project-links">
-                    ${project.demoUrl ? `<a href="${project.demoUrl}" target="_blank" class="project-btn demo-btn"><i class="fas fa-external-link-alt"></i> Live Demo</a>` : ''}
-                    ${project.codeUrl ? `<a href="${project.codeUrl}" target="_blank" class="project-btn code-btn"><i class="fab fa-github"></i> View Code</a>` : ''}
-                </div>
-            </div>
-        `;
-        
-        projectGrid.appendChild(card);
-        
-        // Add animation observer if it exists
-        if (typeof observer !== 'undefined') {
-            observer.observe(card);
-        }
-    });
-    
-    // Add hover effects
-    addHoverEffectsToCards();
+// Add CSS for GitHub error messages
+const style = document.createElement('style');
+style.textContent = `
+.github-error {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    margin: 1rem 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
-// This function is no longer needed as we're using displayProjects directly
+.github-error p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.github-error i {
+    font-size: 2rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+`;
+document.head.appendChild(style);
 
 // Add hover effects to project cards
 function addHoverEffectsToCards() {
@@ -402,53 +396,35 @@ function addHoverEffectsToCards() {
 }
 
 // Create project card from GitHub repo data
-function createGitHubProjectCard(repo) {
+function createProjectCard(repo) {
     const card = document.createElement('article');
     card.className = 'project-card';
     
     // Determine project category for filtering
     let category = 'other';
-    
-    // Get technologies from repo language
-    const technologies = [];
-    if (repo.language) {
-        technologies.push(repo.language);
-    }
-    
-    // Add some common technologies based on repo name or description
     const lowerName = repo.name.toLowerCase();
-    const lowerDescription = repo.description ? repo.description.toLowerCase() : '';
+    const lowerDescription = (repo.description || '').toLowerCase();
     
-    if (lowerName.includes('react') || lowerDescription.includes('react')) {
-        technologies.push('React');
-    }
-    if (lowerName.includes('node') || lowerDescription.includes('node')) {
-        technologies.push('Node.js');
-    }
-    if (lowerName.includes('api') || lowerDescription.includes('api')) {
-        technologies.push('REST API');
-    }
-    
-    // Assign category based on project name, description, or technologies
+    // Assign category based on repo name, description, or language
     if (
         lowerName.includes('web') || 
         lowerName.includes('site') || 
-        lowerDescription.includes('web') ||
-        (repo.topics && repo.topics.some(topic => ['web', 'website', 'frontend'].includes(topic)))
+        lowerName.includes('html') || 
+        lowerName.includes('css') || 
+        lowerName.includes('react') || 
+        lowerName.includes('angular') || 
+        lowerName.includes('vue') ||
+        (repo.language && ['JavaScript', 'TypeScript', 'HTML', 'CSS'].includes(repo.language))
     ) {
         category = 'web';
     } else if (
-        lowerName.includes('api') || 
-        lowerName.includes('server') || 
-        lowerDescription.includes('api') ||
-        (repo.topics && repo.topics.some(topic => ['api', 'backend', 'server'].includes(topic)))
-    ) {
-        category = 'api';
-    } else if (
         lowerName.includes('app') || 
         lowerName.includes('mobile') || 
-        lowerDescription.includes('app') ||
-        (repo.topics && repo.topics.some(topic => ['app', 'mobile', 'android', 'ios'].includes(topic)))
+        lowerName.includes('android') || 
+        lowerName.includes('ios') || 
+        lowerName.includes('flutter') || 
+        lowerName.includes('react-native') ||
+        lowerDescription.includes('mobile app')
     ) {
         category = 'app';
     }
@@ -456,22 +432,81 @@ function createGitHubProjectCard(repo) {
     // Set category as data attribute for filtering
     card.setAttribute('data-category', category);
     
-    // Format repository name for display
-    const displayName = repo.name
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, l => l.toUpperCase());
+    // Default image for GitHub projects
+    const defaultImage = 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=GitHub+Project';
     
-    // Generate a placeholder image if no image is available
-    const imageUrl = `https://via.placeholder.com/600x400/2a2a2a/ffffff?text=${encodeURIComponent(displayName)}`;
+    // Get repository description or generate one based on name
+    let description = repo.description;
+    
+    if (!description) {
+        if (lowerName.includes('ecommerce') || lowerName.includes('shop')) {
+            description = 'An e-commerce application with product listings, shopping cart, and checkout functionality.';
+        } else if (lowerName.includes('blog') || lowerName.includes('cms')) {
+            description = 'A content management system for creating and managing blog posts and articles.';
+        } else if (lowerName.includes('api') || lowerName.includes('rest')) {
+            description = 'A RESTful API service for data management and integration.';
+        } else if (lowerName.includes('chat') || lowerName.includes('message')) {
+            description = 'A real-time chat application with messaging functionality.';
+        } else if (lowerName.includes('game')) {
+            description = 'An interactive web-based game with engaging gameplay.';
+        } else if (lowerName.includes('dashboard') || lowerName.includes('admin')) {
+            description = 'An administrative dashboard for data visualization and management.';
+        } else if (lowerName.includes('weather')) {
+            description = 'A weather forecasting application that provides real-time weather data.';
+        } else if (lowerName.includes('task') || lowerName.includes('todo')) {
+            description = 'A task management application with organization features.';
+        } else {
+            description = 'A web application built with modern technologies and best practices.';
+        }
+    }
+    
+    // Get repository languages or use topics
+    let technologies = [];
+    
+    // If repo has topics, use those
+    if (repo.topics && repo.topics.length > 0) {
+        technologies = repo.topics.slice(0, 4).map(topic => 
+            topic.charAt(0).toUpperCase() + topic.slice(1).replace(/-/g, ' ')
+        );
+    } 
+    // If repo has language, use that
+    else if (repo.language) {
+        technologies.push(repo.language);
+        
+        // Add some common complementary technologies based on the main language
+        if (repo.language === 'JavaScript') {
+            technologies.push('HTML', 'CSS');
+        } else if (repo.language === 'TypeScript') {
+            technologies.push('Angular', 'React');
+        } else if (repo.language === 'Java') {
+            technologies.push('Spring Boot');
+        } else if (repo.language === 'Python') {
+            technologies.push('Flask', 'Django');
+        } else if (repo.language === 'HTML') {
+            technologies.push('CSS', 'JavaScript');
+        }
+    } 
+    // Default fallback
+    else {
+        technologies = ['GitHub', 'Web Development'];
+    }
+    
+    // Format the name to be more readable
+    const formattedName = repo.name
+        .replace(/-/g, ' ')
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
     
     // Create project card HTML
     card.innerHTML = `
         <div class="project-image">
-            <img src="${imageUrl}" alt="${displayName}" class="project-img">
+            <img src="${defaultImage}" alt="${formattedName}" class="project-img">
         </div>
         <div class="project-info">
-            <h3>${displayName}</h3>
-            <p>${repo.description || 'No description available'}</p>
+            <h3>${formattedName}</h3>
+            <p>${description}</p>
             <div class="project-technologies">
                 ${technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
             </div>
@@ -483,11 +518,6 @@ function createGitHubProjectCard(repo) {
     `;
     
     return card;
-}
-
-// Make sure we don't have a duplicate function
-function createProjectCard(repo) {
-    return createGitHubProjectCard(repo);
 }
 
 // Theme Toggle Functionality
@@ -805,8 +835,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup contact form
     setupContactForm();
     
-    // Fetch projects
-    fetchGitHubProjects();
+    // Fetch GitHub profile and projects
+    fetchGitHubProfile();
     
     // Close mobile menu when clicking on navigation links
     document.querySelectorAll('.nav-links a').forEach(link => {
