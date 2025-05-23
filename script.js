@@ -109,9 +109,9 @@ function debounce(func, wait = 10) {
 // Add scroll event listener with debounce
 window.addEventListener('scroll', debounce(updateActiveSection));
 
-// Display projects directly without GitHub API
-function fetchGitHubProjects() {
-    console.log('Loading projects...');
+// Fetch GitHub projects with fallback
+async function fetchGitHubProjects() {
+    console.log('Starting to fetch GitHub projects...');
     const projectGrid = document.querySelector('.project-grid');
     const loadingProjects = document.querySelector('.loading-projects');
     
@@ -120,10 +120,17 @@ function fetchGitHubProjects() {
         return;
     }
     
-    // Hide loading indicator immediately
+    // Show loading indicator
     if (loadingProjects) {
-        loadingProjects.style.display = 'none';
+        loadingProjects.style.display = 'flex';
     }
+    
+    // Set a timeout to ensure we don't wait too long
+    const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({ timedOut: true });
+        }, 5000); // 5 second timeout
+    });
     
     // Define projects to display
     const projects = [
@@ -195,10 +202,81 @@ function fetchGitHubProjects() {
         });
     }
     
-    // Display projects directly
-    console.log('Displaying projects directly...');
-    displayProjects(projectGrid, projects);
-};
+    try {
+        const username = 'yashwanthg13';
+        console.log(`Fetching GitHub data for ${username}...`);
+        
+        // Race between fetch and timeout
+        const fetchPromise = fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`);
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        // If we got the timeout result instead of fetch result
+        if (result.timedOut) {
+            console.log('GitHub API request timed out, using fallback projects');
+            throw new Error('Request timed out');
+        }
+        
+        const response = await result;
+        
+        if (!response.ok) {
+            console.log(`GitHub API returned status: ${response.status}`);
+            throw new Error(`GitHub API error: ${response.status}`);
+        }
+        
+        const repos = await response.json();
+        console.log('Successfully fetched GitHub repos:', repos.length);
+        
+        // Hide loading indicator
+        if (loadingProjects) {
+            loadingProjects.style.display = 'none';
+        }
+        
+        // Clear project grid
+        projectGrid.innerHTML = '';
+        
+        if (Array.isArray(repos) && repos.length > 0) {
+            // Filter out forks and empty repos
+            const filteredRepos = repos.filter(repo => !repo.fork && repo.description);
+            
+            if (filteredRepos.length === 0) {
+                console.log('No suitable repos found, using fallback projects');
+                displayProjects(projectGrid, projects);
+                return;
+            }
+            
+            // Limit to 6 projects
+            const limitedRepos = filteredRepos.slice(0, 6);
+            
+            // Create and append project cards
+            limitedRepos.forEach(repo => {
+                const card = createGitHubProjectCard(repo);
+                projectGrid.appendChild(card);
+                
+                // Add animation observer if it exists
+                if (typeof observer !== 'undefined') {
+                    observer.observe(card);
+                }
+            });
+            
+            // Add hover effects to all project cards
+            addHoverEffectsToCards();
+        } else {
+            console.log('No repos returned from GitHub API, using fallback projects');
+            displayProjects(projectGrid, projects);
+        }
+    } catch (error) {
+        console.error('Error fetching GitHub projects:', error);
+        
+        // Hide loading indicator
+        if (loadingProjects) {
+            loadingProjects.style.display = 'none';
+        }
+        
+        // Display fallback projects
+        console.log('Using fallback projects due to error...');
+        displayProjects(projectGrid, projects);
+    }
+}
 
 // Display projects
 function displayProjects(projectGrid, projects) {
@@ -282,35 +360,53 @@ function addHoverEffectsToCards() {
 }
 
 // Create project card from GitHub repo data
-function createProjectCard(repo) {
+function createGitHubProjectCard(repo) {
     const card = document.createElement('article');
     card.className = 'project-card';
     
     // Determine project category for filtering
     let category = 'other';
-    const lowerName = repo.name.toLowerCase();
-    const lowerDescription = (repo.description || '').toLowerCase();
     
-    // Assign category based on repo name, description, or language
+    // Get technologies from repo language
+    const technologies = [];
+    if (repo.language) {
+        technologies.push(repo.language);
+    }
+    
+    // Add some common technologies based on repo name or description
+    const lowerName = repo.name.toLowerCase();
+    const lowerDescription = repo.description ? repo.description.toLowerCase() : '';
+    
+    if (lowerName.includes('react') || lowerDescription.includes('react')) {
+        technologies.push('React');
+    }
+    if (lowerName.includes('node') || lowerDescription.includes('node')) {
+        technologies.push('Node.js');
+    }
+    if (lowerName.includes('api') || lowerDescription.includes('api')) {
+        technologies.push('REST API');
+    }
+    
+    // Assign category based on project name, description, or technologies
     if (
         lowerName.includes('web') || 
         lowerName.includes('site') || 
-        lowerName.includes('html') || 
-        lowerName.includes('css') || 
-        lowerName.includes('react') || 
-        lowerName.includes('angular') || 
-        lowerName.includes('vue') ||
-        (repo.language && ['JavaScript', 'TypeScript', 'HTML', 'CSS'].includes(repo.language))
+        lowerDescription.includes('web') ||
+        (repo.topics && repo.topics.some(topic => ['web', 'website', 'frontend'].includes(topic)))
     ) {
         category = 'web';
     } else if (
+        lowerName.includes('api') || 
+        lowerName.includes('server') || 
+        lowerDescription.includes('api') ||
+        (repo.topics && repo.topics.some(topic => ['api', 'backend', 'server'].includes(topic)))
+    ) {
+        category = 'api';
+    } else if (
         lowerName.includes('app') || 
         lowerName.includes('mobile') || 
-        lowerName.includes('android') || 
-        lowerName.includes('ios') || 
-        lowerName.includes('flutter') || 
-        lowerName.includes('react-native') ||
-        lowerDescription.includes('mobile app')
+        lowerDescription.includes('app') ||
+        (repo.topics && repo.topics.some(topic => ['app', 'mobile', 'android', 'ios'].includes(topic)))
     ) {
         category = 'app';
     }
@@ -318,81 +414,22 @@ function createProjectCard(repo) {
     // Set category as data attribute for filtering
     card.setAttribute('data-category', category);
     
-    // Default image for GitHub projects
-    const defaultImage = 'https://via.placeholder.com/600x400/2a2a2a/ffffff?text=GitHub+Project';
-    
-    // Get repository description or generate one based on name
-    let description = repo.description;
-    
-    if (!description) {
-        if (lowerName.includes('ecommerce') || lowerName.includes('shop')) {
-            description = 'An e-commerce application with product listings, shopping cart, and checkout functionality.';
-        } else if (lowerName.includes('blog') || lowerName.includes('cms')) {
-            description = 'A content management system for creating and managing blog posts and articles.';
-        } else if (lowerName.includes('api') || lowerName.includes('rest')) {
-            description = 'A RESTful API service for data management and integration.';
-        } else if (lowerName.includes('chat') || lowerName.includes('message')) {
-            description = 'A real-time chat application with messaging functionality.';
-        } else if (lowerName.includes('game')) {
-            description = 'An interactive web-based game with engaging gameplay.';
-        } else if (lowerName.includes('dashboard') || lowerName.includes('admin')) {
-            description = 'An administrative dashboard for data visualization and management.';
-        } else if (lowerName.includes('weather')) {
-            description = 'A weather forecasting application that provides real-time weather data.';
-        } else if (lowerName.includes('task') || lowerName.includes('todo')) {
-            description = 'A task management application with organization features.';
-        } else {
-            description = 'A web application built with modern technologies and best practices.';
-        }
-    }
-    
-    // Get repository languages or use topics
-    let technologies = [];
-    
-    // If repo has topics, use those
-    if (repo.topics && repo.topics.length > 0) {
-        technologies = repo.topics.slice(0, 4).map(topic => 
-            topic.charAt(0).toUpperCase() + topic.slice(1).replace(/-/g, ' ')
-        );
-    } 
-    // If repo has language, use that
-    else if (repo.language) {
-        technologies.push(repo.language);
-        
-        // Add some common complementary technologies based on the main language
-        if (repo.language === 'JavaScript') {
-            technologies.push('HTML', 'CSS');
-        } else if (repo.language === 'TypeScript') {
-            technologies.push('Angular', 'React');
-        } else if (repo.language === 'Java') {
-            technologies.push('Spring Boot');
-        } else if (repo.language === 'Python') {
-            technologies.push('Flask', 'Django');
-        } else if (repo.language === 'HTML') {
-            technologies.push('CSS', 'JavaScript');
-        }
-    } 
-    // Default fallback
-    else {
-        technologies = ['GitHub', 'Web Development'];
-    }
-    
-    // Format the name to be more readable
-    const formattedName = repo.name
+    // Format repository name for display
+    const displayName = repo.name
         .replace(/-/g, ' ')
-        .replace(/_/g, ' ')
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+        .replace(/\b\w/g, l => l.toUpperCase());
+    
+    // Generate a placeholder image if no image is available
+    const imageUrl = `https://via.placeholder.com/600x400/2a2a2a/ffffff?text=${encodeURIComponent(displayName)}`;
     
     // Create project card HTML
     card.innerHTML = `
         <div class="project-image">
-            <img src="${defaultImage}" alt="${formattedName}" class="project-img">
+            <img src="${imageUrl}" alt="${displayName}" class="project-img">
         </div>
         <div class="project-info">
-            <h3>${formattedName}</h3>
-            <p>${description}</p>
+            <h3>${displayName}</h3>
+            <p>${repo.description || 'No description available'}</p>
             <div class="project-technologies">
                 ${technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
             </div>
@@ -404,6 +441,11 @@ function createProjectCard(repo) {
     `;
     
     return card;
+}
+
+// Make sure we don't have a duplicate function
+function createProjectCard(repo) {
+    return createGitHubProjectCard(repo);
 }
 
 // Theme Toggle Functionality
