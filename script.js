@@ -109,7 +109,7 @@ function debounce(func, wait = 10) {
 // Add scroll event listener with debounce
 window.addEventListener('scroll', debounce(updateActiveSection));
 
-// Fetch GitHub projects with fallback
+// Fetch GitHub projects
 async function fetchGitHubProjects() {
     console.log('Starting to fetch GitHub projects...');
     const projectGrid = document.querySelector('.project-grid');
@@ -125,15 +125,15 @@ async function fetchGitHubProjects() {
         loadingProjects.style.display = 'flex';
     }
     
-    // Set a timeout to ensure we don't wait too long
+    // Set a longer timeout to ensure we have time to fetch projects
     const timeoutPromise = new Promise((resolve) => {
         setTimeout(() => {
             resolve({ timedOut: true });
-        }, 5000); // 5 second timeout
+        }, 10000); // 10 second timeout for better chances of success
     });
     
-    // Define projects to display
-    const projects = [
+    // We'll only use real GitHub projects, but keep this as a reference
+    const referenceProjects = [
         {
             name: 'E-Commerce Platform',
             description: 'A full-featured e-commerce platform with product catalog, shopping cart, and secure checkout process.',
@@ -206,25 +206,41 @@ async function fetchGitHubProjects() {
         const username = 'yashwanthg13';
         console.log(`Fetching GitHub data for ${username}...`);
         
-        // Race between fetch and timeout
-        const fetchPromise = fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`);
-        const result = await Promise.race([fetchPromise, timeoutPromise]);
+        // Make multiple attempts to fetch repositories
+        let repos = [];
+        let attempts = 0;
+        const maxAttempts = 3;
         
-        // If we got the timeout result instead of fetch result
-        if (result.timedOut) {
-            console.log('GitHub API request timed out, using fallback projects');
-            throw new Error('Request timed out');
+        while (attempts < maxAttempts && repos.length === 0) {
+            attempts++;
+            console.log(`Attempt ${attempts} to fetch GitHub repos...`);
+            
+            try {
+                // Race between fetch and timeout
+                const fetchPromise = fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`);
+                const result = await Promise.race([fetchPromise, timeoutPromise]);
+                
+                // If we got the timeout result instead of fetch result
+                if (result.timedOut) {
+                    console.log('GitHub API request timed out, retrying...');
+                    continue;
+                }
+                
+                const response = await result;
+                
+                if (!response.ok) {
+                    console.log(`GitHub API returned status: ${response.status}, retrying...`);
+                    continue;
+                }
+                
+                repos = await response.json();
+                console.log('Successfully fetched GitHub repos:', repos.length);
+            } catch (fetchError) {
+                console.error('Error in fetch attempt:', fetchError);
+                // Wait a second before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         }
-        
-        const response = await result;
-        
-        if (!response.ok) {
-            console.log(`GitHub API returned status: ${response.status}`);
-            throw new Error(`GitHub API error: ${response.status}`);
-        }
-        
-        const repos = await response.json();
-        console.log('Successfully fetched GitHub repos:', repos.length);
         
         // Hide loading indicator
         if (loadingProjects) {
@@ -235,17 +251,36 @@ async function fetchGitHubProjects() {
         projectGrid.innerHTML = '';
         
         if (Array.isArray(repos) && repos.length > 0) {
-            // Filter out forks and empty repos
-            const filteredRepos = repos.filter(repo => !repo.fork && repo.description);
+            // Filter out forks and empty repos, and prioritize those with descriptions
+            let filteredRepos = repos.filter(repo => !repo.fork);
             
-            if (filteredRepos.length === 0) {
-                console.log('No suitable repos found, using fallback projects');
-                displayProjects(projectGrid, projects);
-                return;
-            }
+            // Sort repos: first those with descriptions, then by stars, then by last updated
+            filteredRepos.sort((a, b) => {
+                // First prioritize repos with descriptions
+                if (a.description && !b.description) return -1;
+                if (!a.description && b.description) return 1;
+                
+                // Then by stars count
+                if (a.stargazers_count !== b.stargazers_count) {
+                    return b.stargazers_count - a.stargazers_count;
+                }
+                
+                // Then by last updated
+                return new Date(b.updated_at) - new Date(a.updated_at);
+            });
             
             // Limit to 6 projects
             const limitedRepos = filteredRepos.slice(0, 6);
+            
+            if (limitedRepos.length === 0) {
+                // If no repos found after filtering, show a message
+                projectGrid.innerHTML = `
+                    <div class="no-projects-message">
+                        <p>No GitHub repositories found. Please check back later.</p>
+                    </div>
+                `;
+                return;
+            }
             
             // Create and append project cards
             limitedRepos.forEach(repo => {
@@ -261,8 +296,12 @@ async function fetchGitHubProjects() {
             // Add hover effects to all project cards
             addHoverEffectsToCards();
         } else {
-            console.log('No repos returned from GitHub API, using fallback projects');
-            displayProjects(projectGrid, projects);
+            // If no repos found, show a message
+            projectGrid.innerHTML = `
+                <div class="no-projects-message">
+                    <p>No GitHub repositories found. Please check back later.</p>
+                </div>
+            `;
         }
     } catch (error) {
         console.error('Error fetching GitHub projects:', error);
@@ -272,9 +311,12 @@ async function fetchGitHubProjects() {
             loadingProjects.style.display = 'none';
         }
         
-        // Display fallback projects
-        console.log('Using fallback projects due to error...');
-        displayProjects(projectGrid, projects);
+        // Show error message
+        projectGrid.innerHTML = `
+            <div class="no-projects-message">
+                <p>Unable to fetch GitHub repositories. Please check back later.</p>
+            </div>
+        `;
     }
 }
 
