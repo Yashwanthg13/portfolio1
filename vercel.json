@@ -44,12 +44,20 @@
       "dest": "/micro-interactions.css"
     },
     {
+      "src": "/hamburger.css",
+      "dest": "/hamburger.css"
+    },
+    {
       "src": "/hero-typing.css",
       "dest": "/hero-typing.css"
     },
     {
       "src": "/script.js",
       "dest": "/script.js"
+    },
+    {
+      "src": "/hamburger.js",
+      "dest": "/hamburger.js"
     },
     {
       "src": "/theme.js",
