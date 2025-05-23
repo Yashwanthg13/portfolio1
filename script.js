@@ -109,34 +109,24 @@ function debounce(func, wait = 10) {
 // Add scroll event listener with debounce
 window.addEventListener('scroll', debounce(updateActiveSection));
 
-// Fetch GitHub projects with fallback
-async function fetchGitHubProjects() {
-    console.log('Starting to fetch GitHub projects...');
+// Display projects directly without GitHub API
+function fetchGitHubProjects() {
+    console.log('Loading projects...');
     const projectGrid = document.querySelector('.project-grid');
     const loadingProjects = document.querySelector('.loading-projects');
-    const githubInfo = document.querySelector('.github-info') || document.createElement('div');
     
     if (!projectGrid) {
         console.error('Project grid element not found');
         return;
     }
     
-    // Show loading indicator
+    // Hide loading indicator immediately
     if (loadingProjects) {
-        loadingProjects.style.display = 'flex';
+        loadingProjects.style.display = 'none';
     }
     
-    // Add immediate timeout to ensure we don't wait too long
-    setTimeout(() => {
-        if (loadingProjects && loadingProjects.style.display === 'flex') {
-            console.log('Loading timeout reached, displaying fallback projects');
-            loadingProjects.style.display = 'none';
-            displayFallbackProjects(projectGrid, fallbackProjects);
-        }
-    }, 3000); // 3 second timeout as a safety measure
-    
-    // Define fallback projects in case GitHub API fails
-    const fallbackProjects = [
+    // Define projects to display
+    const projects = [
         {
             name: 'E-Commerce Platform',
             description: 'A full-featured e-commerce platform with product catalog, shopping cart, and secure checkout process.',
@@ -205,134 +195,15 @@ async function fetchGitHubProjects() {
         });
     }
     
-    try {
-        const username = 'yashwanthg13';
-        console.log(`Fetching GitHub data for ${username}...`);
-        
-        // Set timeout for fetch to avoid hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-        
-        // Fetch user data from our server-side API endpoint
-        console.log(`Fetching GitHub data for ${username} from server API...`);
-        const userResponse = await fetch(`/api/github/user/${username}`, {
-            signal: controller.signal
-        });
-        
-        if (!userResponse.ok) {
-            console.log(`GitHub API returned status: ${userResponse.status}`);
-            throw new Error(`GitHub API user response error: ${userResponse.status}`);
-        }
-        
-        const userData = await userResponse.json();
-        console.log('Successfully fetched GitHub user data');
-        clearTimeout(timeoutId); // Clear timeout after successful fetch
-        
-        // Update GitHub profile info
-        githubInfo.innerHTML = `
-            <div class="github-profile">
-                <img src="${userData.avatar_url}" alt="${username} profile" class="github-avatar">
-                <div class="github-profile-info">
-                    <h3>${userData.name || username}</h3>
-                    <p>${userData.bio || 'Full Stack Web Developer'}</p>
-                    <div class="github-stats">
-                        <div class="stat">
-                            <span class="stat-value">${userData.public_repos}</span>
-                            <span class="stat-label">Repositories</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">${userData.followers}</span>
-                            <span class="stat-label">Followers</span>
-                        </div>
-                    </div>
-                    <a href="${userData.html_url}" target="_blank" class="github-link">
-                        <i class="fab fa-github"></i> View Profile
-                    </a>
-                </div>
-            </div>
-        `;
-        
-        // Set new timeout for repos fetch
-        const reposController = new AbortController();
-        const reposTimeoutId = setTimeout(() => reposController.abort(), 5000);
-        
-        // Fetch repositories from our server-side API endpoint
-        console.log(`Fetching GitHub repos for ${username} from server API...`);
-        const reposResponse = await fetch(`/api/github/repos/${username}`, {
-            signal: reposController.signal
-        });
-        
-        if (!reposResponse.ok) {
-            throw new Error(`GitHub API repos response error: ${reposResponse.status}`);
-        }
-        
-        const repos = await reposResponse.json();
-        clearTimeout(reposTimeoutId);
-        
-        // Hide loading indicator
-        if (loadingProjects) {
-            loadingProjects.style.display = 'none';
-        }
-        
-        // Clear project grid
-        projectGrid.innerHTML = '';
-        
-        if (Array.isArray(repos) && repos.length > 0) {
-            // Filter out portfolio repository and forks
-            const filteredRepos = repos.filter(repo => 
-                !repo.name.toLowerCase().includes('portfolio') && 
-                !repo.fork
-            );
-            
-            if (filteredRepos.length === 0) {
-                displayFallbackProjects(projectGrid, fallbackProjects);
-                return;
-            }
-            
-            // Limit to 6 projects
-            const limitedRepos = filteredRepos.slice(0, 6);
-            
-            // Create and append project cards
-            limitedRepos.forEach(repo => {
-                const projectCard = createProjectCard(repo);
-                projectGrid.appendChild(projectCard);
-                
-                // Add animation observer if it exists
-                if (typeof observer !== 'undefined') {
-                    observer.observe(projectCard);
-                }
-            });
-            
-            // Add hover effects to all project cards
-            addHoverEffectsToCards();
-        } else {
-            displayFallbackProjects(projectGrid, fallbackProjects);
-        }
-        
-    } catch (error) {
-        console.error('Error fetching GitHub projects:', error);
-        
-        // Hide loading indicator
-        if (loadingProjects) {
-            loadingProjects.style.display = 'none';
-        }
-        
-        // Display fallback projects
-        console.log('Using fallback projects...');
-        displayFallbackProjects(projectGrid, fallbackProjects);
-    }
-}
+    // Display projects directly
+    console.log('Displaying projects directly...');
+    displayProjects(projectGrid, projects);
+};
 
-// Display fallback projects when GitHub API fails
-function displayFallbackProjects(projectGrid, projects) {
-    console.log('Displaying fallback projects...');
+// Display projects
+function displayProjects(projectGrid, projects) {
+    console.log('Setting up projects display...');
     projectGrid.innerHTML = '';
-    
-    // Make sure we hide the loading indicator
-    const loadingProjects = document.querySelector('.loading-projects');
-    if (loadingProjects) {
-        loadingProjects.style.display = 'none';
-    }
     
     projects.forEach(project => {
         const card = document.createElement('article');
@@ -392,6 +263,8 @@ function displayFallbackProjects(projectGrid, projects) {
     // Add hover effects
     addHoverEffectsToCards();
 }
+
+// This function is no longer needed as we're using displayProjects directly
 
 // Add hover effects to project cards
 function addHoverEffectsToCards() {
