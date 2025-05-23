@@ -211,10 +211,11 @@ async function fetchGitHubProjects() {
         
         // Set timeout for fetch to avoid hanging
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // Reduced to 3 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
         
-        // Fetch user data
-        const userResponse = await fetch(`https://api.github.com/users/${username}`, {
+        // Fetch user data from our server-side API endpoint
+        console.log(`Fetching GitHub data for ${username} from server API...`);
+        const userResponse = await fetch(`/api/github/user/${username}`, {
             signal: controller.signal
         });
         
@@ -255,8 +256,9 @@ async function fetchGitHubProjects() {
         const reposController = new AbortController();
         const reposTimeoutId = setTimeout(() => reposController.abort(), 5000);
         
-        // Fetch repositories
-        const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`, {
+        // Fetch repositories from our server-side API endpoint
+        console.log(`Fetching GitHub repos for ${username} from server API...`);
+        const reposResponse = await fetch(`/api/github/repos/${username}`, {
             signal: reposController.signal
         });
         
