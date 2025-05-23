@@ -4,9 +4,69 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.pdf",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/send-message",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/style.css",
+      "dest": "/style.css"
+    },
+    {
+      "src": "/project-cards.css",
+      "dest": "/project-cards.css"
+    },
+    {
+      "src": "/micro-interactions.css",
+      "dest": "/micro-interactions.css"
+    },
+    {
+      "src": "/hamburger.css",
+      "dest": "/hamburger.css"
+    },
+    {
+      "src": "/hero-typing.css",
+      "dest": "/hero-typing.css"
+    },
+    {
+      "src": "/script.js",
+      "dest": "/script.js"
+    },
+    {
+      "src": "/hamburger.js",
+      "dest": "/hamburger.js"
+    },
+    {
+      "src": "/theme.js",
+      "dest": "/theme.js"
+    },
+    {
+      "src": "/typing-effect.js",
+      "dest": "/typing-effect.js"
+    },
+    {
+      "src": "/YashwanthG_Resume12.pdf",
+      "dest": "/YashwanthG_Resume12.pdf"
+    },
     {
       "src": "/(.*)",
       "dest": "/server.js"

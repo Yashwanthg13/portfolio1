@@ -11,7 +11,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
-app.use(express.static('./'));
+app.use(express.static(path.join(__dirname, '/')));
+
+// Explicitly define routes for CSS files
+app.get('*.css', (req, res) => {
+  res.set('Content-Type', 'text/css');
+  res.sendFile(path.join(__dirname, req.path));
+});
+
+// Explicitly define routes for JS files
+app.get('*.js', (req, res) => {
+  res.set('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, req.path));
+});
 
 // Handle contact form submissions
 app.post('/send-message', async (req, res) => {
